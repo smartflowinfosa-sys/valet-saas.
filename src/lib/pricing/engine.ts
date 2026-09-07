@@ -12,7 +12,7 @@ export async function calculatePrice(
 
   if (serviceError || !service) throw new Error("لم يتم العثور على الخدمة");
 
-  // 2. جلب قواعد التسعير المرتبطة بهذه الخدمة (بفضل RLS، ستأتي قواعد الشركة فقط)
+  // 2. جلب قواعد التسعير المرتبطة بهذه الخدمة
   const { data: rules } = await supabase
     .from('pricing_rules')
     .select('*')
@@ -25,8 +25,8 @@ export async function calculatePrice(
   const valets = params.valets || 0;
   const cars = params.cars || 0;
 
-  // 3. تطبيق القواعد الديناميكية
-  rules?.forEach(rule => {
+  // 3. تطبيق القواعد الديناميكية (تم حل مشكلة TypeScript هنا إضافة any)
+  rules?.forEach((rule: any) => {
     const val = Number(rule.value);
     switch (rule.rule_type) {
       case 'hourly':

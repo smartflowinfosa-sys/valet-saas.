@@ -10,12 +10,14 @@ function calculateHours(startTime: string, endTime: string): number {
   const [sh, sm] = startTime.split(':').map(Number);
   const [eh, em] = endTime.split(':').map(Number);
   let diff = (eh + em / 60) - (sh + sm / 60);
-  if (diff <= 0) diff += 24; // للتعامل مع الحجوزات التي تمتد لبعد منتصف الليل
+  if (diff <= 0) diff += 24; 
   return Math.ceil(diff); 
 }
 
 export async function submitAndGenerateQuote(companySlug: string, formData: any) {
-  const cookieStore = cookies();
+  // التعديل هنا: أضفنا كلمة await قبل cookies()
+  const cookieStore = await cookies(); 
+  
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -23,7 +25,6 @@ export async function submitAndGenerateQuote(companySlug: string, formData: any)
   );
 
   try {
-    // 1. البحث عن الشركة برقمها السري عبر الـ Slug فقط
     const { data: company, error: companyError } = await supabase
       .from('companies')
       .select('id')
@@ -32,7 +33,6 @@ export async function submitAndGenerateQuote(companySlug: string, formData: any)
 
     if (companyError || !company) throw new Error("الشركة غير موجودة");
 
-    // 2. حفظ طلب العميل (Quote Request)
     const { data: request, error: requestError } = await supabase
       .from('quote_requests')
       .insert([{ company_id: company.id, status: 'pending', details: formData }])
@@ -41,17 +41,14 @@ export async function submitAndGenerateQuote(companySlug: string, formData: any)
 
     if (requestError) throw new Error("حدث خطأ أثناء حفظ الطلب");
 
-    // 3. تطبيق محرك التسعير (Pricing Engine)
     const pricingParams = {
       hours: calculateHours(formData.start_time, formData.end_time),
       cars: Number(formData.expected_cars || 0),
-      valets: Number(formData.valets || 0) // يمكن تفعيله لاحقاً إذا أضفناه للاستمارة
+      valets: Number(formData.valets || 0) // تم التحديث ليقرأ الموظفين بشكل صحيح
     };
 
-    // الحساب يتم بآمان على الخادم
     const { total, breakdown } = await calculatePrice(supabase, formData.service_id, pricingParams);
 
-    // 4. إنشاء رقم فريد وحفظ لقطة ثابتة للسعر (Snapshot)
     const quoteNumber = `QT-${Math.floor(100000 + Math.random() * 900000)}`;
 
     const { error: quoteError } = await supabase
@@ -62,7 +59,7 @@ export async function submitAndGenerateQuote(companySlug: string, formData: any)
         quote_number: quoteNumber,
         total_amount: total,
         status: 'draft',
-        snapshot: breakdown // هنا نحفظ تفاصيل السعر لكي لا يتغير مستقبلاً!
+        snapshot: breakdown 
       }]);
 
     if (quoteError) throw new Error("حدث خطأ أثناء توليد عرض السعر");

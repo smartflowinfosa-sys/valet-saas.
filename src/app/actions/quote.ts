@@ -3,6 +3,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { calculatePrice } from '@/lib/pricing/engine';
+import { notifier } from '@/lib/notifications/NotificationService'; // 👈 إضافة: استدعاء مدير الإشعارات
 
 // دالة مساعدة لحساب عدد الساعات بين وقتين
 function calculateHours(startTime: string, endTime: string): number {
@@ -15,7 +16,6 @@ function calculateHours(startTime: string, endTime: string): number {
 }
 
 export async function submitAndGenerateQuote(companySlug: string, formData: any) {
-  // التعديل هنا: أضفنا كلمة await قبل cookies()
   const cookieStore = await cookies(); 
   
   const supabase = createServerClient(
@@ -63,6 +63,18 @@ export async function submitAndGenerateQuote(companySlug: string, formData: any)
       }]);
 
     if (quoteError) throw new Error("حدث خطأ أثناء توليد عرض السعر");
+
+    // ==========================================
+    // 💡 إضافة: إطلاق الإشعار في الخلفية
+    // (بدون await لكي لا نؤخر العميل أبداً)
+    // ==========================================
+    notifier.dispatch({
+      companyId: company.id,
+      type: 'new_request',
+      title: 'طلب عرض سعر جديد 📥',
+      message: `تم استلام طلب جديد، رقم العرض: ${quoteNumber}`
+    });
+    // ==========================================
 
     return { success: true, message: "تم إنشاء الطلب وعرض السعر بنجاح" };
 

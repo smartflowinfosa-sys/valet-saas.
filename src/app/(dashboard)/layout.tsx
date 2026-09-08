@@ -3,6 +3,9 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import React from 'react';
 
+// 💡 استدعاء مكون جرس الإشعارات
+import NotificationBell from '@/components/dashboard/NotificationBell';
+
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const cookieStore = await cookies();
   const supabase = createServerClient(
@@ -65,6 +68,18 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
         {/* عرض محتوى الصفحة بشكل طبيعي (أو تحت الشفافية إذا انتهت التجربة) */}
         <div className={isExpired ? 'pointer-events-none blur-sm opacity-50 h-screen overflow-hidden' : ''}>
+          
+          {/* ========================================== */}
+          {/* 💡 الشريط العلوي (Header) مع جرس الإشعارات */}
+          {/* ========================================== */}
+          <header className="bg-white border-b border-gray-100 px-6 py-4 flex justify-between items-center sticky top-0 z-30 shadow-sm">
+            <h2 className="text-xl font-bold text-gray-800">لوحة تحكم التاجر</h2>
+            <div className="flex items-center gap-4">
+              <NotificationBell />
+            </div>
+          </header>
+          {/* ========================================== */}
+
           {children}
         </div>
       </main>

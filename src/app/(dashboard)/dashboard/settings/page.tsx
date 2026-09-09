@@ -25,7 +25,6 @@ export default function SettingsPage() {
   });
 
   useEffect(() => {
-    // التقاط الدومين الحالي ديناميكياً لإنشاء الرابط
     setAppDomain(window.location.origin);
 
     async function loadSettings() {
@@ -37,6 +36,7 @@ export default function SettingsPage() {
         setCompanyId(userData.company_id);
         const { data: company } = await supabase.from('companies').select('*').eq('id', userData.company_id).single();
         if (company) {
+          // استخدام || '' يضمن عدم وجود قيم undefined تسبب أخطاء TypeScript
           setFormData({
             name: company.name || '',
             slug: company.slug || '',
@@ -60,7 +60,7 @@ export default function SettingsPage() {
   };
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(`${appDomain}/q/${formData.slug}`);
+    navigator.clipboard.writeText(`${appDomain}/q/${formData.slug || 'company-slug'}`);
     setMessage({ type: 'success', text: 'تم نسخ الرابط بنجاح!' });
     setTimeout(() => setMessage({ type: '', text: '' }), 3000);
   };
@@ -75,17 +75,16 @@ export default function SettingsPage() {
     setSaving(true);
     setMessage({ type: '', text: '' });
 
-    // تنظيف الـ Slug من المسافات والأحرف الخاصة قبل الإرسال
     const cleanedData = {
       ...formData,
-      slug: formData.slug.toLowerCase().replace(/[^a-z0-9-]/g, '-')
+      slug: (formData.slug || '').toLowerCase().replace(/[^a-z0-9-]/g, '-')
     };
 
     const response = await updateCompanySettings(companyId, cleanedData);
     
     if (response.success) {
       setMessage({ type: 'success', text: response.message });
-      setFormData(cleanedData); // تحديث الواجهة بالـ Slug المنظف
+      setFormData(cleanedData);
     } else {
       setMessage({ type: 'error', text: response.error });
     }
@@ -107,7 +106,6 @@ export default function SettingsPage() {
         </div>
       )}
 
-      {/* قسم الرابط العام (Public URL Section) */}
       <div className="bg-gray-900 rounded-3xl p-6 md:p-8 mb-8 text-white shadow-lg flex flex-col md:flex-row items-center justify-between gap-6 border border-gray-800">
         <div className="flex-1 w-full">
           <h2 className="text-lg font-bold mb-2">رابط طلب عرض السعر لعملائك</h2>
@@ -126,59 +124,55 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* نموذج الإعدادات */}
       <form onSubmit={handleSubmit} className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 space-y-8">
         
-        {/* الهوية الأساسية */}
         <div>
           <h3 className="text-xl font-bold text-gray-900 mb-4 border-b pb-2">الهوية الأساسية</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">اسم الشركة</label>
-              <input type="text" name="name" required value={formData.name} onChange={handleChange} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#b89742]" />
+              <input type="text" name="name" required value={formData.name || ''} onChange={handleChange} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#b89742]" />
             </div>
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">الرابط المخصص (Slug)</label>
-              <input type="text" name="slug" required value={formData.slug} onChange={handleChange} dir="ltr" className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#b89742] text-left" placeholder="my-company" />
-              <p className="text-xs text-gray-400 mt-1">أحرف إنجليزية وأرقام وعلامة (-) فقط.</p>
+              <input type="text" name="slug" required value={formData.slug || ''} onChange={handleChange} dir="ltr" className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#b89742] text-left" placeholder="my-company" />
             </div>
             <div className="md:col-span-2">
               <label className="block text-sm font-bold text-gray-700 mb-2">رابط الشعار (Logo URL)</label>
-              <input type="url" name="logo_url" value={formData.logo_url} onChange={handleChange} dir="ltr" className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#b89742] text-left" placeholder="https://example.com/logo.png" />
+              <input type="url" name="logo_url" value={formData.logo_url || ''} onChange={handleChange} dir="ltr" className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#b89742] text-left" placeholder="https://example.com/logo.png" />
             </div>
             <div className="md:col-span-2">
               <label className="block text-sm font-bold text-gray-700 mb-2">وصف مختصر للشركة</label>
-              <textarea name="description" rows={3} value={formData.description} onChange={handleChange} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#b89742] resize-none"></textarea>
+              <textarea name="description" rows={3} value={formData.description || ''} onChange={handleChange} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#b89742] resize-none"></textarea>
             </div>
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">لون الهوية الرئيسي</label>
               <div className="flex items-center gap-3">
-                <input type="color" name="brand_color" value={formData.brand_color} onChange={handleChange} className="h-12 w-12 rounded-xl cursor-pointer" />
-                <span className="text-sm font-mono text-gray-500" dir="ltr">{formData.brand_color}</span>
+                <input type="color" name="brand_color" value={formData.brand_color || '#b89742'} onChange={handleChange} className="h-12 w-12 rounded-xl cursor-pointer" />
+                <span className="text-sm font-mono text-gray-500" dir="ltr">{formData.brand_color || '#b89742'}</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* بيانات التواصل */}
         <div>
           <h3 className="text-xl font-bold text-gray-900 mb-4 border-b pb-2">بيانات التواصل</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">رقم الهاتف (الرئيسي)</label>
-              <input type="tel" name="phone" value={formData.phone} onChange={handleChange} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#b89742]" />
+              <input type="tel" name="phone" value={formData.phone || ''} onChange={handleChange} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#b89742]" />
             </div>
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">رقم الواتساب (للتواصل)</label>
-              <input type="tel" name="whatsapp" value={formData.whatsapp} onChange={handleChange} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#b89742]" />
+              <input type="tel" name="whatsapp" value={formData.whatsapp || ''} onChange={handleChange} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#b89742]" />
             </div>
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">البريد الإلكتروني</label>
-              <input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#b89742]" />
+              <input type="email" name="email" value={formData.email || ''} onChange={handleChange} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#b89742]" />
             </div>
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">العنوان / المقر الرئيسي</label>
-              <input type="text" name="address" value={formData.address} onChange={handleChange} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#b89742]" />
+              <input type="text" name="address" value={formData.address || ''} onChange={handleChange} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#b89742]" />
             </div>
           </div>
         </div>

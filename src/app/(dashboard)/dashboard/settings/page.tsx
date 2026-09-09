@@ -4,6 +4,19 @@ import React, { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { updateCompanySettings } from '@/app/actions/settings';
 
+// 1. تعريف واجهة صارمة لضمان عدم وجود undefined نهائياً
+interface SettingsData {
+  name: string;
+  slug: string;
+  description: string;
+  logo_url: string;
+  phone: string;
+  email: string;
+  whatsapp: string;
+  address: string;
+  brand_color: string;
+}
+
 export default function SettingsPage() {
   const supabase = createClient();
   const [loading, setLoading] = useState(true);
@@ -12,7 +25,9 @@ export default function SettingsPage() {
   const [message, setMessage] = useState({ type: '', text: '' });
   const [appDomain, setAppDomain] = useState('');
 
-const [formData, setFormData] = useState<any>({    name: '',
+  // 2. تعيين قيم ابتدائية صريحة كنصوص
+  const [formData, setFormData] = useState<SettingsData>({
+    name: '',
     slug: '',
     description: '',
     logo_url: '',
@@ -35,7 +50,6 @@ const [formData, setFormData] = useState<any>({    name: '',
         setCompanyId(userData.company_id);
         const { data: company } = await supabase.from('companies').select('*').eq('id', userData.company_id).single();
         if (company) {
-          // استخدام || '' يضمن عدم وجود قيم undefined تسبب أخطاء TypeScript
           setFormData({
             name: company.name || '',
             slug: company.slug || '',
@@ -76,7 +90,7 @@ const [formData, setFormData] = useState<any>({    name: '',
 
     const cleanedData = {
       ...formData,
-      slug: (formData.slug || '').toLowerCase().replace(/[^a-z0-9-]/g, '-')
+      slug: formData.slug.toLowerCase().replace(/[^a-z0-9-]/g, '-')
     };
 
     const response = await updateCompanySettings(companyId, cleanedData);
@@ -130,25 +144,25 @@ const [formData, setFormData] = useState<any>({    name: '',
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">اسم الشركة</label>
-              <input type="text" name="name" required value={formData.name || ''} onChange={handleChange} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#b89742]" />
+              <input type="text" name="name" required value={formData.name} onChange={handleChange} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#b89742]" />
             </div>
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">الرابط المخصص (Slug)</label>
-              <input type="text" name="slug" required value={formData.slug || ''} onChange={handleChange} dir="ltr" className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#b89742] text-left" placeholder="my-company" />
+              <input type="text" name="slug" required value={formData.slug} onChange={handleChange} dir="ltr" className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#b89742] text-left" placeholder="my-company" />
             </div>
             <div className="md:col-span-2">
               <label className="block text-sm font-bold text-gray-700 mb-2">رابط الشعار (Logo URL)</label>
-              <input type="url" name="logo_url" value={formData.logo_url || ''} onChange={handleChange} dir="ltr" className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#b89742] text-left" placeholder="https://example.com/logo.png" />
+              <input type="url" name="logo_url" value={formData.logo_url} onChange={handleChange} dir="ltr" className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#b89742] text-left" placeholder="https://example.com/logo.png" />
             </div>
             <div className="md:col-span-2">
               <label className="block text-sm font-bold text-gray-700 mb-2">وصف مختصر للشركة</label>
-              <textarea name="description" rows={3} value={formData.description || ''} onChange={handleChange} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#b89742] resize-none"></textarea>
+              <textarea name="description" rows={3} value={formData.description} onChange={handleChange} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#b89742] resize-none"></textarea>
             </div>
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">لون الهوية الرئيسي</label>
               <div className="flex items-center gap-3">
-                <input type="color" name="brand_color" value={formData.brand_color || '#b89742'} onChange={handleChange} className="h-12 w-12 rounded-xl cursor-pointer" />
-                <span className="text-sm font-mono text-gray-500" dir="ltr">{formData.brand_color || '#b89742'}</span>
+                <input type="color" name="brand_color" value={formData.brand_color} onChange={handleChange} className="h-12 w-12 rounded-xl cursor-pointer" />
+                <span className="text-sm font-mono text-gray-500" dir="ltr">{formData.brand_color}</span>
               </div>
             </div>
           </div>
@@ -159,19 +173,19 @@ const [formData, setFormData] = useState<any>({    name: '',
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">رقم الهاتف (الرئيسي)</label>
-              <input type="tel" name="phone" value={formData.phone || ''} onChange={handleChange} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#b89742]" />
+              <input type="tel" name="phone" value={formData.phone} onChange={handleChange} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#b89742]" />
             </div>
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">رقم الواتساب (للتواصل)</label>
-              <input type="tel" name="whatsapp" value={formData.whatsapp || ''} onChange={handleChange} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#b89742]" />
+              <input type="tel" name="whatsapp" value={formData.whatsapp} onChange={handleChange} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#b89742]" />
             </div>
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">البريد الإلكتروني</label>
-              <input type="email" name="email" value={formData.email || ''} onChange={handleChange} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#b89742]" />
+              <input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#b89742]" />
             </div>
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">العنوان / المقر الرئيسي</label>
-              <input type="text" name="address" value={formData.address || ''} onChange={handleChange} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#b89742]" />
+              <input type="text" name="address" value={formData.address} onChange={handleChange} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#b89742]" />
             </div>
           </div>
         </div>

@@ -19,7 +19,7 @@ export async function calculatePrice(
     .eq('service_id', serviceId);
 
   let total = Number(service.base_price || 0);
-  let breakdown = [{ desc: `السعر الأساسي (${service.name})`, amount: total }];
+  const breakdown = [{ desc: `السعر الأساسي (${service.name})`, amount: total }];
 
   const hours = params.hours || 0;
   const valets = params.valets || 0;

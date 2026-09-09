@@ -3,8 +3,9 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import React from 'react';
 
-// 💡 استدعاء مكون جرس الإشعارات
+// 💡 استدعاء مكون جرس الإشعارات وزر الخروج
 import NotificationBell from '@/components/dashboard/NotificationBell';
+import LogoutButton from '@/components/dashboard/LogoutButton';
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const cookieStore = await cookies();
@@ -70,12 +71,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <div className={isExpired ? 'pointer-events-none blur-sm opacity-50 h-screen overflow-hidden' : ''}>
           
           {/* ========================================== */}
-          {/* 💡 الشريط العلوي (Header) مع جرس الإشعارات */}
+          {/* 💡 الشريط العلوي (Header) مع جرس الإشعارات وزر الخروج */}
           {/* ========================================== */}
           <header className="bg-white border-b border-gray-100 px-6 py-4 flex justify-between items-center sticky top-0 z-30 shadow-sm">
             <h2 className="text-xl font-bold text-gray-800">لوحة تحكم التاجر</h2>
             <div className="flex items-center gap-4">
               <NotificationBell />
+              <LogoutButton />
             </div>
           </header>
           {/* ========================================== */}

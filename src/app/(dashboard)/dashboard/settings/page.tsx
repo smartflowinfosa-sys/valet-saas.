@@ -12,8 +12,7 @@ export default function SettingsPage() {
   const [message, setMessage] = useState({ type: '', text: '' });
   const [appDomain, setAppDomain] = useState('');
 
-  const [formData, setFormData] = useState({
-    name: '',
+const [formData, setFormData] = useState<any>({    name: '',
     slug: '',
     description: '',
     logo_url: '',
